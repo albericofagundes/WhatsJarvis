@@ -1,6 +1,7 @@
 import { create } from "venom-bot";
 import sharp from "sharp";
 import fs from "fs";
+import { v4 as uuidv4 } from "uuid";
 
 // Criação do cliente do WhatsApp
 const createOption = {
@@ -25,18 +26,19 @@ async function commands(client, message) {
   if (message.type == "image" && message.caption === "/sticker") {
     const imgBuffer = await client.decryptFile(message);
     console.log("imgBuffer", imgBuffer);
+    const randomId = uuidv4();
+    console.log("randomId", randomId);
 
-    fs.writeFileSync("output.webp", imgBuffer);
+    // fs.writeFileSync("output.webp", imgBuffer);
 
     sharp(imgBuffer)
       .toFormat("webp") // Converter para formato webp
       .toBuffer()
-      .resize(200)
       .then((webpBuffer) => {
-        fs.writeFileSync("output.webp", webpBuffer);
+        fs.writeFileSync(`temp/${randomId}.webp`, webpBuffer);
 
         client
-          .sendImageAsSticker(message.chatId, "./output.webp")
+          .sendImageAsSticker(message.chatId, `temp/${randomId}.webp`)
           .then((result) => {
             console.log("Result: ", result); //return object success
           })

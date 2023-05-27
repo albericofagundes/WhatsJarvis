@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "uuid": "^9.0.0",
     "venom-bot": "^5.0.1",
     "wa-sticker-formatter": "^4.4.4"
   }
