@@ -3,7 +3,7 @@ import sharp from "sharp";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 
-let shuffledArray =[];
+let shuffledArray = [];
 
 // Criação do cliente do WhatsApp
 const createOption = {
@@ -20,7 +20,30 @@ create(createOption)
     console.log("erro\n", erro);
   });
 
-async function sendBlackjackButtons(client, chatId) {
+
+  function verificarCartasIguais(mao) {
+    if (mao.length === 0) {
+      return false; // Não há cartas na mão
+    }
+  
+    const primeiroValor = mao[0].valor;
+    
+    for (let i = 1; i < mao.length; i++) {
+      if (mao[i].valor !== primeiroValor) {
+        return false; // Cartas com valores diferentes encontradas
+      }
+    }
+    
+    return true; // Todas as cartas possuem o mesmo valor
+  }
+  
+
+
+
+async function sendBlackjackButtons(client, chatId, isSplit) {
+  if (isSplit === true) {
+    console.log("isSplit===true");
+  }
   console.log("sendBlackjackButtons");
 
   // Send Messages with Buttons Reply
@@ -73,18 +96,18 @@ async function sendBlackjackButtons(client, chatId) {
   // ];
   console.log("buttons", buttons);
 
-  const messageOptions = {
-    title: "Opções de Blackjack",
-    subtitle: "Escolha uma opção",
-    buttons: buttons,
-  };
+  // const messageOptions = {
+  //   title: "Opções de Blackjack",
+  //   subtitle: "Escolha uma opção",
+  //   buttons: buttons,
+  // };
 
   // const messageOptions = {
   //   title: "Opções de Blackjack",
   //   buttons: buttons,
   //   footerText: "Escolha uma opção",
   // };
-  console.log("messageOptions", messageOptions);
+  // console.log("messageOptions", messageOptions);
 
   await client
     .sendButtons(chatId, "O que você deseja fazer?", buttons, "Description")
@@ -135,19 +158,19 @@ function shuffleArray(array) {
 function criarBaralhos(numBaralhos) {
   const naipes = ["Paus", "Ouros", "Copas", "Espadas"];
   const valores = [
-    "Ás",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "Valete",
-    "Dama",
-    "Rei",
+    { nome: "Ás", valor: [1, 11] },
+    { nome: "2", valor: 2 },
+    { nome: "3", valor: 3 },
+    { nome: "4", valor: 4 },
+    { nome: "5", valor: 5 },
+    { nome: "6", valor: 6 },
+    { nome: "7", valor: 7 },
+    { nome: "8", valor: 8 },
+    { nome: "9", valor: 9 },
+    { nome: "10", valor: 10 },
+    { nome: "Valete", valor: 10 },
+    { nome: "Dama", valor: 10 },
+    { nome: "Rei", valor: 10 },
   ];
   const baralhos = [];
 
@@ -156,7 +179,8 @@ function criarBaralhos(numBaralhos) {
       for (let valor of valores) {
         const carta = {
           naipe: naipe,
-          valor: valor,
+          nome: valor.nome,
+          valor: valor.valor,
         };
         baralhos.push(carta);
       }
@@ -170,10 +194,8 @@ async function commands(client, message) {
   console.log("message.type", message.type);
   const buttonId = message.selectedButtonId;
 
-
-  
   switch (buttonId) {
-    case 'id0':
+    case "id0":
       console.log("\n\n\nshuffledArray.length\n\n\n", shuffledArray.length);
       console.log("Lógica para a ação de  (pedir uma nova carta)");
       const novasCarta = shuffledArray.splice(0, 1);
@@ -185,19 +207,18 @@ async function commands(client, message) {
 
       const novaCarta = novasCarta.map(formatarCarta);
 
-
       client.sendText(message.chatId, ` Nova Carta 🤖\n\n ${novaCarta}`);
 
       break;
-    case 'id1':
+    case "id1":
       // Lógica para a ação de "Stand" (manter a mão atual)
       console.log("manter a mão atual");
       break;
-    case 'id2':
+    case "id2":
       // Lógica para a ação de "Double Down" (dobrar a aposta e pedir apenas uma carta adicional)
       console.log("dobrar a aposta e pedir apenas uma carta adicional");
       break;
-    case 'id3':
+    case "id3":
       // Lógica para a ação de "Split" (dividir a mão em duas mãos separadas)
       console.log("dividir a mão em duas mãos separadas");
       break;
@@ -207,13 +228,10 @@ async function commands(client, message) {
       break;
   }
 
-
-
   console.log("buttonId", buttonId);
   const iaCommands = {
     sticker: "/sticker",
     blackjack: "/blackjack",
-
   };
 
   if (message.type === "chat") {
@@ -240,7 +258,6 @@ async function commands(client, message) {
 
         const cartasBanca = shuffledArray.splice(0, 2);
 
-
         console.log("\n\n\n\nCartas do jogador:", cartasJogador);
         function formatarCarta(carta) {
           return `${carta.valor} de ${carta.naipe}`;
@@ -249,14 +266,18 @@ async function commands(client, message) {
         const cartaJogador = cartasJogador.map(formatarCarta);
         const cartaBanca = cartasBanca.map(formatarCarta);
 
-        client.sendText(message.chatId, ` Cartas Jogador 🤖\n\n ${cartaJogador}`);
-        client.sendText(message.chatId, ` Cartas da Banca 🤖\n\n ${cartaBanca}`);
-        await sendBlackjackButtons(client, message.chatId);
+        client.sendText(
+          message.chatId,
+          ` Cartas Jogador 🤖\n\n ${cartaJogador}`
+        );
+        client.sendText(
+          message.chatId,
+          ` Cartas da Banca 🤖\n\n ${cartaBanca}`
+        );
+        await sendBlackjackButtons(client, message.chatId, isSplit);
         console.log("\n\n\nshuffledArray.length\n\n\n", shuffledArray.length);
 
         break;
-
-    
     }
   }
 
